@@ -22,6 +22,9 @@ Notepadd is a lightweight, Python-based text editor built with Tkinter. It is de
 
 Or, if you want to run with python, do it. 
 
+## Notepadd
+Version: **v1.0.0 (Alpha)**
+
 
 
 
