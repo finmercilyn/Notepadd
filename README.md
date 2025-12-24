@@ -19,7 +19,7 @@ Notepadd is a lightweight, Python-based text editor built with Tkinter. It is de
 
 - Open the **dist** folder.
 - Double-click the 'Notepadd.exe' file to run the app.
-- Or use zipped file on releases.
+- Or, use zipped file on releases.
 
 Or, if you want to run with python, do it. 
 
