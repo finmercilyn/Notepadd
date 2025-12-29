@@ -1,31 +1,24 @@
-[README.txt](https://github.com/user-attachments/files/24315320/README.txt)
 # Notepadd
 
-Notepadd is a lightweight, Python-based text editor built with Tkinter. It is designed for simple note-taking, allowing users to quickly create, edit, and save text files with ease. The application focuses on functionality while keeping the interface clean and easy to use.
+Notepadd is a lightweight, Python-based text editor built with PySide6. It’s designed for simple note-taking while offering advanced features like tables, images, PDF export, and dark mode.
 
 ## Features
-
-- Create new notes  
-- Save notes to any location  
-- Adjust font size  
-- Change text color and background color  
+- Create new notes
+- Save notes to any location (TXT or HTML)
+- Export notes to PDF
+- Print notes
+- Adjust font and colors
+- Dark/Light mode
+- Multi-language support
+- Insert tables and images
 
 ## Requirements
-
-- Python 3.12+  
-- Tkinter (included in Python standard library)  
+- Python 3.12+
+- PySide6
 
 ## How to run
-
-- Open the **dist** folder.
-- Double-click the 'Notepadd.exe' file to run the app.
-- Or, use zipped file on releases.
-
-Or, if you want to run with python, do it. 
-
-## Notepadd
-Version: **v1.0.0 (Alpha)**
-
-
-
-
+1. Open the dist folder.
+2. Double-click `notepadd.exe` to run the app.
+3. Or, run with Python using:
+```bash
+python notepadd.py
