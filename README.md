@@ -2,7 +2,7 @@
 
 Notepadd is a lightweight, Python-based text editor built with PySide6. It’s designed for simple note-taking while offering advanced features like tables, images, PDF export, and dark mode.
 
-Note: Go to releases for the new version.
+**Note: Go to releases for the new version.**
 
 ## Features
 - Create new notes
