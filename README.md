@@ -18,9 +18,6 @@ Notepadd is a lightweight, Python-based text editor built with PySide6. It’s d
 
 ## How to run
 1. Open the dist folder.
-2. Double-click `notepadd.exe` to run the app.
-3. Or, run with Python using:
-```bash
-python notepadd.py
+2. Double-click `notepadd.exe` to run the app or use python > py notepadd.py
 
-Version: v1.1.0-Beta
+## Version: v1.1.0-Beta
