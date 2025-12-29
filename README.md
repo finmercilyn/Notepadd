@@ -22,3 +22,5 @@ Notepadd is a lightweight, Python-based text editor built with PySide6. It’s d
 3. Or, run with Python using:
 ```bash
 python notepadd.py
+
+Version: v1.1.0-Beta
