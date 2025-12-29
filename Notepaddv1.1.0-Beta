@@ -1,0 +1,295 @@
+import sys
+from PySide6.QtWidgets import (
+    QApplication, QMainWindow, QTextEdit, QFileDialog, QStatusBar,
+    QFontDialog, QColorDialog, QDialog, QVBoxLayout, QLineEdit,
+    QPushButton, QLabel, QSpinBox, QFormLayout, QWidget,
+    QMessageBox, QHBoxLayout, QMenuBar, QStyle
+)
+from PySide6.QtGui import (
+    QFont, QColor, QTextImageFormat,
+    QTextTableFormat, QTextLength
+)
+from PySide6.QtCore import Qt, QSettings
+from PySide6.QtPrintSupport import QPrinter, QPrintDialog
+
+
+# ---------------- SUPPORT DIALOG ----------------
+class SupportDialog(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Support")
+        self.setFixedSize(320, 120)
+        layout = QVBoxLayout(self)
+        label = QLabel("Mail:\ncomfortablynumb34@hotmail.com")
+        label.setAlignment(Qt.AlignCenter)
+        layout.addWidget(label)
+
+
+# ---------------- MAIN ----------------
+class Notepadd(QMainWindow):
+    def __init__(self):
+        super().__init__()
+
+        # Windows başlığı için
+        self.setWindowTitle("Notepadd")
+
+        # Frameless window kaldırıldı
+        # self.setWindowFlags(Qt.FramelessWindowHint)
+
+        self.settings = QSettings("Notepadd", "Notepadd")
+
+        self.is_dark = self.settings.value("dark", False, bool)
+        self.current_lang = self.settings.value("lang", "TR")
+        self.page_color = self.settings.value("page_color", None)
+
+        self.resize(self.settings.value("size", self.size()))
+        self.move(self.settings.value("pos", self.pos()))
+
+        container = QWidget()
+        container.setObjectName("main")
+        layout = QVBoxLayout(container)
+        layout.setContentsMargins(1, 1, 1, 1)
+        layout.setSpacing(0)
+        self.setCentralWidget(container)
+
+        self.menu = QMenuBar()
+        layout.addWidget(self.menu)
+
+        self.text_area = QTextEdit()
+        self.text_area.textChanged.connect(self.update_stats)
+        layout.addWidget(self.text_area)
+
+        self.status = QStatusBar()
+        self.stats_label = QLabel()
+        self.status.addPermanentWidget(self.stats_label)
+        layout.addWidget(self.status)
+
+        self.languages = {
+            "TR": {
+                "title": "Notepadd",
+                "file": "Dosya", "new": "Yeni", "save": "Kaydet",
+                "pdf": "PDF", "print": "Yazdır", "exit": "Çıkış",
+                "edit": "Düzen", "undo": "Geri Al", "redo": "İleri Al",
+                "table": "Tablo", "image": "Resim", "find": "Bul",
+                "style": "Stil", "bold": "Kalın", "italic": "İtalik",
+                "underline": "Altı Çizili", "font": "Font",
+                "format": "Biçim", "text_color": "Metin Rengi",
+                "page_color": "Sayfa Rengi",
+                "view": "Görünüm", "dark": "Gece Modu",
+                "lang": "EN",
+                "help": "Yardım", "about": "Hakkında",
+                "support": "Destek",
+                "stats": "Kelime: {} | Karakter: {} | Okuma: {} dk",
+                "placeholder": "Yazmaya başlayın..."
+            },
+            "EN": {
+                "title": "Notepadd",
+                "file": "File", "new": "New", "save": "Save",
+                "pdf": "PDF", "print": "Print", "exit": "Exit",
+                "edit": "Edit", "undo": "Undo", "redo": "Redo",
+                "table": "Table", "image": "Image", "find": "Find",
+                "style": "Style", "bold": "Bold", "italic": "Italic",
+                "underline": "Underline", "font": "Font",
+                "format": "Format", "text_color": "Text Color",
+                "page_color": "Page Color",
+                "view": "View", "dark": "Dark Mode",
+                "lang": "TR",
+                "help": "Help", "about": "About",
+                "support": "Support",
+                "stats": "Words: {} | Chars: {} | Read: {} min",
+                "placeholder": "Start typing..."
+            }
+        }
+
+        self.update_theme()
+        self.init_menu()
+        self.update_stats()
+
+    # -------- THEME --------
+    def update_theme(self):
+        bg = self.page_color if self.page_color else ("#1e1e1e" if self.is_dark else "#ffffff")
+        fg = "#d4d4d4" if self.is_dark else "#1f2937"
+
+        self.centralWidget().setStyleSheet(f"""
+            QWidget#main {{ background:{bg}; }}
+            QTextEdit {{ background:{bg}; color:{fg}; border:none; padding:20px; }}
+            QMenuBar {{ background:{bg}; color:{fg}; }}
+            QStatusBar {{ background:{bg}; color:#888; }}
+        """)
+
+    # -------- MENU --------
+    def init_menu(self):
+        self.menu.clear()
+        d = self.languages[self.current_lang]
+        self.text_area.setPlaceholderText(d["placeholder"])
+
+        f = self.menu.addMenu(d["file"])
+        f.addAction(d["new"], self.new_file)
+        f.addAction(d["save"], self.save_file)
+        f.addAction(d["pdf"], self.export_pdf)
+        f.addAction(d["print"], self.print_file)
+        f.addSeparator()
+        f.addAction(d["exit"], self.close)
+
+        e = self.menu.addMenu(d["edit"])
+        e.addAction(d["undo"], self.text_area.undo)
+        e.addAction(d["redo"], self.text_area.redo)
+        e.addAction(d["table"], self.insert_table)
+        e.addAction(d["image"], self.insert_image)
+        e.addAction(d["find"], self.open_find_dialog)
+
+        fmt = self.menu.addMenu(d["format"])
+        s = fmt.addMenu(d["style"])
+        s.addAction(d["bold"], self.make_bold)
+        s.addAction(d["italic"], self.make_italic)
+        s.addAction(d["underline"], self.make_underline)
+        fmt.addAction(d["font"], self.change_font)
+        fmt.addAction(d["text_color"], self.change_text_color)
+        fmt.addAction(d["page_color"], self.change_page_color)
+
+        v = self.menu.addMenu(d["view"])
+        v.addAction(d["dark"], self.toggle_dark)
+        v.addAction(d["lang"], self.toggle_language)
+
+        h = self.menu.addMenu(d["help"])
+        h.addAction(d["support"], self.show_support)
+        h.addAction(d["about"], lambda: QMessageBox.information(self, "Notepadd", "Notepadd"))
+
+    # -------- CORE --------
+    def update_stats(self):
+        t = self.text_area.toPlainText()
+        w = len(t.split())
+        c = len(t)
+        r = max(1, w // 200)
+        self.stats_label.setText(self.languages[self.current_lang]["stats"].format(w, c, r))
+
+    def toggle_dark(self):
+        self.is_dark = not self.is_dark
+        self.update_theme()
+
+    def toggle_language(self):
+        self.current_lang = "EN" if self.current_lang == "TR" else "TR"
+        self.init_menu()
+        self.update_stats()
+
+    def closeEvent(self, e):
+        self.settings.setValue("dark", self.is_dark)
+        self.settings.setValue("lang", self.current_lang)
+        self.settings.setValue("page_color", self.page_color)
+        self.settings.setValue("size", self.size())
+        self.settings.setValue("pos", self.pos())
+        super().closeEvent(e)
+
+    # -------- FILE --------
+    def new_file(self):
+        self.text_area.clear()
+
+    def save_file(self):
+        path, _ = QFileDialog.getSaveFileName(self, "Save", "", "Text (*.txt);;HTML (*.html)")
+        if path:
+            data = self.text_area.toHtml() if path.endswith(".html") else self.text_area.toPlainText()
+            with open(path, "w", encoding="utf-8") as f:
+                f.write(data)
+
+    def export_pdf(self):
+        path, _ = QFileDialog.getSaveFileName(self, "PDF", "", "PDF (*.pdf)")
+        if path:
+            p = QPrinter(QPrinter.HighResolution)
+            p.setOutputFormat(QPrinter.PdfFormat)
+            p.setOutputFileName(path)
+            self.text_area.document().print_(p)
+
+    def print_file(self):
+        p = QPrinter(QPrinter.HighResolution)
+        if QPrintDialog(p, self).exec():
+            self.text_area.print_(p)
+
+    # -------- FORMAT --------
+    def make_bold(self):
+        f = self.text_area.currentCharFormat()
+        f.setFontWeight(QFont.Bold if f.fontWeight() != QFont.Bold else QFont.Normal)
+        self.text_area.setCurrentCharFormat(f)
+
+    def make_italic(self):
+        f = self.text_area.currentCharFormat()
+        f.setFontItalic(not f.fontItalic())
+        self.text_area.setCurrentCharFormat(f)
+
+    def make_underline(self):
+        f = self.text_area.currentCharFormat()
+        f.setFontUnderline(not f.fontUnderline())
+        self.text_area.setCurrentCharFormat(f)
+
+    def change_font(self):
+        ok, font = QFontDialog.getFont(self.text_area.font(), self)
+        if ok:
+            self.text_area.setCurrentFont(font)
+
+    def change_text_color(self):
+        c = QColorDialog.getColor()
+        if c.isValid():
+            self.text_area.setTextColor(c)
+
+    def change_page_color(self):
+        c = QColorDialog.getColor()
+        if c.isValid():
+            self.page_color = c.name()
+            self.update_theme()
+
+    def insert_image(self):
+        path, _ = QFileDialog.getOpenFileName(self, "Image", "", "Images (*.png *.jpg *.jpeg)")
+        if path:
+            img = QTextImageFormat()
+            img.setName(path)
+            img.setWidth(500)
+            self.text_area.textCursor().insertImage(img)
+
+    def insert_table(self):
+        d = TableDialog(self)
+        if d.exec():
+            fmt = QTextTableFormat()
+            fmt.setBorder(1)
+            fmt.setCellPadding(8)
+            fmt.setWidth(QTextLength(QTextLength.PercentageLength, 100))
+            self.text_area.textCursor().insertTable(d.rows.value(), d.cols.value(), fmt)
+
+    def open_find_dialog(self):
+        d = FindDialog(self)
+        d.btn.clicked.connect(lambda: self.text_area.find(d.input.text()))
+        d.show()
+
+    def show_support(self):
+        SupportDialog(self).exec()
+
+
+# -------- DIALOGS --------
+class TableDialog(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        l = QFormLayout(self)
+        self.rows = QSpinBox()
+        self.rows.setRange(1, 50)
+        self.cols = QSpinBox()
+        self.cols.setRange(1, 10)
+        b = QPushButton("OK")
+        l.addRow("Rows", self.rows)
+        l.addRow("Cols", self.cols)
+        l.addWidget(b)
+        b.clicked.connect(self.accept)
+
+
+class FindDialog(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        l = QVBoxLayout(self)
+        self.input = QLineEdit()
+        self.btn = QPushButton("Find")
+        l.addWidget(self.input)
+        l.addWidget(self.btn)
+
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    w = Notepadd()
+    w.show()
+    sys.exit(app.exec())
